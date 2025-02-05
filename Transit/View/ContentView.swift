@@ -5,21 +5,22 @@
 //  Created by Sangit Manandhar on 2/5/25.
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    @Query private var stops: [Stop]
+    @State var isAdding = false
 
     var body: some View {
         NavigationSplitView {
             List {
-                ForEach(items) { item in
+                ForEach(stops) { item in
                     NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
+                        ScheduleListView(stopID: item.stopID, stopName: item.stopName)
                     } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+                        Text(item.stopName)
                     }
                 }
                 .onDelete(perform: deleteItems)
@@ -29,19 +30,21 @@ struct ContentView: View {
                     EditButton()
                 }
                 ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+                    Button(action: { isAdding.toggle() }) {
+                        Label("Add Stop", systemImage: "plus")
+                    }.sheet(isPresented: $isAdding) {
+                        StopFormView(isPresented: $isAdding, addItem: addItem)
                     }
                 }
             }
         } detail: {
-            Text("Select an item")
+            Text("Select a Stop")
         }
     }
 
-    private func addItem() {
+    private func addItem(stopID: Int, stopName: String) {
         withAnimation {
-            let newItem = Item(timestamp: Date())
+            let newItem = Stop(stopID: stopID, stopName: stopName)
             modelContext.insert(newItem)
         }
     }
@@ -49,13 +52,8 @@ struct ContentView: View {
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
-                modelContext.delete(items[index])
+                modelContext.delete(stops[index])
             }
         }
     }
-}
-
-#Preview {
-    ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
 }
