@@ -4,7 +4,7 @@ struct ScheduleListView: View {
     var stopID: Int
     var stopName: String
     @State private var schedules: [Schedule] = []
-    @State private var error: String = ""
+    @State private var error: String?
 
     var body: some View {
         HStack(spacing: 10) {
@@ -24,10 +24,20 @@ struct ScheduleListView: View {
         }
         ScrollView {
             VStack(alignment: .leading, spacing: 10) {
-                ForEach(schedules) { schedule in
-                    ScheduleView(schedule: schedule)
+                if (error?.isEmpty) != nil {
+                    Text(error!)
+                        .foregroundColor(.red)
+                        .padding()
+                } else if schedules.isEmpty {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle())
+                        .padding()
+                } else {
+                    ForEach(schedules) { schedule in
+                        ScheduleView(schedule: schedule)
+                    }
+                    Spacer()
                 }
-                Spacer()
             }
         }.task {
             await getData(overrideCache: false)
@@ -40,11 +50,12 @@ struct ScheduleListView: View {
 
     private func getData(overrideCache: Bool) async {
         do {
-            let (schedules, _) = try await ScheduleService.shared.getSchedule(
+            let (schedules, error) = try await ScheduleService.shared.getSchedule(
                 stopID, overrideCache)
             self.schedules = schedules
+            self.error = error
         } catch {
             self.error = error.localizedDescription
         }
     }
-}
+

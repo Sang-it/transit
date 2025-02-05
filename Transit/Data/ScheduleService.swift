@@ -9,7 +9,7 @@ final class ScheduleService {
     private func fetch(_ stopID: Int, _ overrideCache: Bool = false) async throws -> (
         [Schedule], String?
     ) {
-        guard let url = URL(string: localUrl) else {
+        guard let url = URL(string: serverUrl) else {
             throw URLError(.badURL)
         }
 
